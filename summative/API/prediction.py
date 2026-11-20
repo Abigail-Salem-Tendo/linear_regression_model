@@ -27,6 +27,18 @@ FEATURES = [
 
 app = FastAPI(title="Rwanda Outage Duration API")
 
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=[
+        "https://YOUR-SERVICE.onrender.com",   # replace after deploying on Render
+        "http://localhost:5000",               # Flutter web debug (--web-port=5000)
+        "http://127.0.0.1:5000",
+    ],
+    allow_methods=["GET", "POST"],
+    allow_headers=["Content-Type"],
+    allow_credentials=False,
+)
+
 # Loaded once at startup. /retrain will replace state["model"].
 state = {"model": joblib.load(MODEL_PATH)}
 
