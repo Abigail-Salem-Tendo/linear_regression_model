@@ -1,10 +1,10 @@
 from pathlib import Path
-
 import joblib
 import pandas as pd
 from fastapi import FastAPI, File, HTTPException, UploadFile
 from pydantic import BaseModel, Field
 from retrain import retrain_model
+from fastapi.middleware.cors import CORSMiddleware
 
 BASE_DIR = Path(__file__).parent
 MODEL_PATH = BASE_DIR / "best_model.pkl"
@@ -56,3 +56,18 @@ def predict(data: OutageInput):
     prediction = state["model"].predict(row)[0]
     prediction = min(max(float(prediction), 0), 300)  # target was capped at 300 minutes
     return {"predicted_outage_minutes": round(prediction, 1)}
+
+
+@app.post("/retrain")
+async def retrain(file: UploadFile = File(...)):
+    if not file.filename.endswith(".csv"):
+        raise HTTPException(status_code=400, detail="Please upload a .csv file")
+
+    contents = await file.read()
+    try:
+        new_model, info = retrain_model(state["model"], contents, FEATURES)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+    state["model"] = new_model  # /predict now uses the new model, no redeploy
+    return {"message": "Model retrained and now in use", **info}
