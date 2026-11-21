@@ -73,7 +73,7 @@ app = FastAPI(title="Rwanda Outage Duration API")
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
-        "https://YOUR-SERVICE.onrender.com",  # replace after deploying on Render
+        "https://rwanda-outage-api.onrender.com",  # replace after deploying on Render
         "http://localhost:5000",  # Flutter web debug (--web-port=5000)
         "http://127.0.0.1:5000",
     ],
