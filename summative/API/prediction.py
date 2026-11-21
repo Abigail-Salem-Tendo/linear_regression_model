@@ -3,7 +3,6 @@ import pandas as pd
 from fastapi import FastAPI, File, HTTPException, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, ConfigDict, Field, model_validator
-
 from retrain import data_path, model_path, retrain_model
 
 # Same column order as the training data

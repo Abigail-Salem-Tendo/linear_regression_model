@@ -104,20 +104,40 @@ class _PredictionPageState extends State<PredictionPage> {
     final text = Theme.of(context).textTheme;
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Outage Predictor'), centerTitle: true),
+      appBar: AppBar(title: const Text('Outage Duration Predictor'), centerTitle: true),
       body: SafeArea(
         child: ListView(
           controller: _scroll,
           padding: const EdgeInsets.all(16),
           children: [
-            Text('How long will outages last?',
-                style: text.titleLarge?.copyWith(fontWeight: FontWeight.bold)),
-            const SizedBox(height: 4),
-            const Text('Estimates the total outage time in a typical week for a '
-                'grid-connected household in Rwanda. Fill in all 12 fields; the '
-                'accepted values are shown under each one.'),
-            const SizedBox(height: 16),
-            for (final section in sections) _buildSection(section, colors, text),
+                        Card(
+              elevation: 0,
+              color: colors.secondaryContainer,
+              margin: const EdgeInsets.only(bottom: 16),
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'How long will outages last?',
+                      style: text.titleLarge?.copyWith(
+                        color: colors.onSecondaryContainer,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(height: 6),
+                    Text(
+                      'Estimates the total outage time in a typical week for a '
+                      'grid-connected household in Rwanda. Fill in all 12 fields; the '
+                      'accepted values are shown under each one.',
+                      style: text.bodyMedium?.copyWith(color: colors.onSecondaryContainer),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+                        for (final section in sections) _buildSection(section, colors, text),
             SizedBox(
               height: 52,
               child: FilledButton(
