@@ -114,8 +114,8 @@ class _PredictionPageState extends State<PredictionPage> {
                 style: text.titleLarge?.copyWith(fontWeight: FontWeight.bold)),
             const SizedBox(height: 4),
             const Text('Estimates the total outage time in a typical week for a '
-                'grid-connected household in Rwanda. Fill in all 12 fields: type a '
-                'value or tap one of the options.'),
+                'grid-connected household in Rwanda. Fill in all 12 fields; the '
+                'accepted values are shown under each one.'),
             const SizedBox(height: 16),
             for (final section in sections) _buildSection(section, colors, text),
             SizedBox(
@@ -157,7 +157,7 @@ class _PredictionPageState extends State<PredictionPage> {
     );
   }
 
-  /// One labelled text field, with its options as tappable chips underneath.
+  /// One labelled text field,with its options listed underneath.
   Widget _buildField(InputField f) {
     final controller = _controllers[f.key]!;
 
