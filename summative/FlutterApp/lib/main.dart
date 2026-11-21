@@ -16,9 +16,7 @@ class OutageApp extends StatelessWidget {
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(
           seedColor: const Color(0xFF183642),
-          primary: const Color(
-            0xFF183642,
-          ), // the button uses exactly this colour
+          primary: const Color(0xFF183642), // the button uses exactly this colour
         ),
         useMaterial3: true,
       ),
@@ -37,9 +35,7 @@ class PredictionPage extends StatefulWidget {
 }
 
 class _PredictionPageState extends State<PredictionPage> {
-  final _controllers = {
-    for (final f in allFields) f.key: TextEditingController(),
-  };
+  final _controllers = {for (final f in allFields) f.key: TextEditingController()};
   final _scroll = ScrollController();
 
   ResultState _state = ResultState.idle;
@@ -64,11 +60,8 @@ class _PredictionPageState extends State<PredictionPage> {
     });
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (_scroll.hasClients) {
-        _scroll.animateTo(
-          _scroll.position.maxScrollExtent,
-          duration: const Duration(milliseconds: 300),
-          curve: Curves.easeOut,
-        );
+        _scroll.animateTo(_scroll.position.maxScrollExtent,
+            duration: const Duration(milliseconds: 300), curve: Curves.easeOut);
       }
     });
   }
@@ -76,39 +69,30 @@ class _PredictionPageState extends State<PredictionPage> {
   Future<void> _predict() async {
     FocusScope.of(context).unfocus();
 
-    // Check for missing values and wrong types
+    // 1. Check for missing values and wrong types
     final inputs = <String, int>{};
     for (final f in allFields) {
       final text = _controllers[f.key]!.text.trim();
-      final number = int.tryParse(text);
-      if (number == null) {
-        final problem = text.isEmpty ? 'is missing' : 'must be a whole number';
+      final code = f.toCode(text);
+      if (code == null) {
+        final problem = text.isEmpty ? 'is missing' : f.problemText;
         _show(ResultState.error, '${f.label} $problem.', badField: f.key);
         return;
       }
-      inputs[f.key] = number;
+      inputs[f.key] = code;
     }
 
-    // Send the values to the API
-    _show(
-      ResultState.loading,
-      'Predicting… the first request can take up to a minute.',
-    );
+    // 2. Send the values to the API (see api_service.dart)
+    _show(ResultState.loading, 'Predicting… the first request can take up to a minute.');
     final result = await predictOutage(inputs);
     if (!mounted) return;
 
-    // Show the prediction, or the API's error (e.g. a value out of range)
+    // 3. Show the prediction, or the API's error (e.g. a value out of range)
     if (result.isSuccess) {
-      _show(
-        ResultState.success,
-        '${result.minutes!.toStringAsFixed(1)} minutes',
-      );
+      _show(ResultState.success, '${result.minutes!.toStringAsFixed(1)} minutes');
     } else if (result.fieldKey != null) {
-      _show(
-        ResultState.error,
-        '${labelFor(result.fieldKey!)} ${result.error}.',
-        badField: result.fieldKey,
-      );
+      _show(ResultState.error, '${labelFor(result.fieldKey!)} ${result.error}.',
+          badField: result.fieldKey);
     } else {
       _show(ResultState.error, result.error!);
     }
@@ -126,19 +110,14 @@ class _PredictionPageState extends State<PredictionPage> {
           controller: _scroll,
           padding: const EdgeInsets.all(16),
           children: [
-            Text(
-              'How long will outages last?',
-              style: text.titleLarge?.copyWith(fontWeight: FontWeight.bold),
-            ),
+            Text('How long will outages last?',
+                style: text.titleLarge?.copyWith(fontWeight: FontWeight.bold)),
             const SizedBox(height: 4),
-            const Text(
-              'Estimates the total outage time in a typical week for a '
-              'grid-connected household in Rwanda. Fill in all 12 fields using '
-              'the values shown under each one.',
-            ),
+            const Text('Estimates the total outage time in a typical week for a '
+                'grid-connected household in Rwanda. Fill in all 12 fields: type a '
+                'value or tap one of the options.'),
             const SizedBox(height: 16),
-            for (final section in sections)
-              _buildSection(section, colors, text),
+            for (final section in sections) _buildSection(section, colors, text),
             SizedBox(
               height: 52,
               child: FilledButton(
@@ -154,84 +133,82 @@ class _PredictionPageState extends State<PredictionPage> {
     );
   }
 
-  /// One card is a titled group of labelled text fields.
-  Widget _buildSection(
-    FieldSection section,
-    ColorScheme colors,
-    TextTheme text,
-  ) {
+  /// One card: a titled group of fields.
+  Widget _buildSection(FieldSection section, ColorScheme colors, TextTheme text) {
     return Card(
       elevation: 0,
       color: colors.surfaceContainerLow,
       margin: const EdgeInsets.only(bottom: 16),
       child: Padding(
-        padding: const EdgeInsets.fromLTRB(16, 16, 16, 2),
+        padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Row(
-              children: [
-                Icon(section.icon, color: colors.primary),
-                const SizedBox(width: 8),
-                Text(section.title, style: text.titleMedium),
-              ],
-            ),
+            Row(children: [
+              Icon(section.icon, color: colors.primary),
+              const SizedBox(width: 8),
+              Text(section.title, style: text.titleMedium),
+            ]),
             const SizedBox(height: 14),
-            for (final f in section.fields)
-              Padding(
-                padding: const EdgeInsets.only(bottom: 14),
-                child: TextField(
-                  controller: _controllers[f.key],
-                  keyboardType: const TextInputType.numberWithOptions(
-                    signed: true,
-                    decimal: true,
-                  ),
-                  onChanged: (_) {
-                    if (_badField == f.key) setState(() => _badField = null);
-                  },
-                  decoration: InputDecoration(
-                    labelText: f.label,
-                    helperText: '${f.hint}  ·  ${f.key}',
-                    helperMaxLines: 2,
-                    errorText: _badField == f.key ? 'Check this value' : null,
-                    filled: true,
-                    border: const OutlineInputBorder(),
-                  ),
-                ),
-              ),
+            for (final f in section.fields) _buildField(f),
           ],
         ),
       ),
     );
   }
 
-  /// The display area hint, spinner, prediction, or error message.
+  /// One labelled text field, with its options as tappable chips underneath.
+  Widget _buildField(InputField f) {
+    final controller = _controllers[f.key]!;
+
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 18),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          TextField(
+            controller: controller,
+            keyboardType: f.acceptsWords
+                ? TextInputType.text
+                : const TextInputType.numberWithOptions(signed: true, decimal: true),
+            onChanged: (_) => setState(() {
+              if (_badField == f.key) _badField = null;
+            }),
+            decoration: InputDecoration(
+              labelText: f.label,
+              helperText: '${f.hint}  ·  ${f.key}',
+              helperMaxLines: 3,
+              errorText: _badField == f.key ? 'Check this value' : null,
+              filled: true,
+              border: const OutlineInputBorder(),
+            ),
+          ),
+          if (f.options.isNotEmpty && !f.wordsOnly) ...[
+            const SizedBox(height: 6),
+            for (final option in f.options.entries)
+              Padding(
+                padding: const EdgeInsets.only(left: 12, top: 2),
+                child: Text('${option.key}  ${option.value}',
+                    style: Theme.of(context).textTheme.bodyMedium),
+              ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  /// The display area: hint, spinner, prediction, or error message.
   Widget _buildResult(ColorScheme colors, TextTheme text) {
     final (background, foreground, icon) = switch (_state) {
-      ResultState.success => (
-        colors.primaryContainer,
-        colors.onPrimaryContainer,
-        Icons.timer_outlined,
-      ),
-      ResultState.error => (
-        colors.errorContainer,
-        colors.onErrorContainer,
-        Icons.error_outline,
-      ),
-      _ => (
-        colors.surfaceContainerHighest,
-        colors.onSurfaceVariant,
-        Icons.info_outline,
-      ),
+      ResultState.success => (colors.primaryContainer, colors.onPrimaryContainer, Icons.timer_outlined),
+      ResultState.error => (colors.errorContainer, colors.onErrorContainer, Icons.error_outline),
+      _ => (colors.surfaceContainerHighest, colors.onSurfaceVariant, Icons.info_outline),
     };
     final isSuccess = _state == ResultState.success;
 
     return Container(
       padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: background,
-        borderRadius: BorderRadius.circular(16),
-      ),
+      decoration: BoxDecoration(color: background, borderRadius: BorderRadius.circular(16)),
       child: Column(
         children: [
           _state == ResultState.loading
@@ -242,16 +219,12 @@ class _PredictionPageState extends State<PredictionPage> {
             _message,
             textAlign: TextAlign.center,
             style: (isSuccess ? text.headlineMedium : text.bodyLarge)?.copyWith(
-              color: foreground,
-              fontWeight: isSuccess ? FontWeight.bold : null,
-            ),
+                color: foreground, fontWeight: isSuccess ? FontWeight.bold : null),
           ),
           if (isSuccess)
-            Text(
-              'Estimated total outage time in a typical week',
-              textAlign: TextAlign.center,
-              style: text.bodyMedium?.copyWith(color: foreground),
-            ),
+            Text('Estimated total outage time in a typical week',
+                textAlign: TextAlign.center,
+                style: text.bodyMedium?.copyWith(color: foreground)),
         ],
       ),
     );
